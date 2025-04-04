@@ -31,6 +31,8 @@
 </template>
 
 <script>
+import axios from 'axios'
+
 export default {
   data() {
     return {
@@ -50,20 +52,38 @@ export default {
       const droppedFiles = Array.from(event.dataTransfer.files)
       this.uploadVideos(droppedFiles)
     },
-    uploadVideos(selectedFiles) {
+    async uploadVideos(selectedFiles) {
+      console.log('Selected files:', selectedFiles) // Log selected files
       if (selectedFiles.length === 0) {
         alert('Please select at least one video file.')
         return
       }
 
-      this.videos = selectedFiles.map((file) => {
-        const url = URL.createObjectURL(file) // Create a local URL for the video
-        return {
-          title: file.name,
-          url: url,
-          tags: this.extractTags(file.name), // Simulated tags based on filename
-        }
+      const uploadPromises = selectedFiles.map((file) => {
+        const formData = new FormData()
+        formData.append('video', file)
+
+        return axios
+          .post('http://localhost:3000/upload', formData)
+          .then((response) => {
+            const url = URL.createObjectURL(file)
+            return {
+              title: file.name,
+              url: url,
+              tags: this.extractTags(file.name),
+            }
+          })
+          .catch((error) => {
+            console.error(
+              'Error uploading file:',
+              error.response ? error.response.data : error.message,
+            )
+            return null // Handle the error
+          })
       })
+
+      const uploadedVideos = await Promise.all(uploadPromises)
+      this.videos = uploadedVideos.filter((video) => video !== null)
     },
     extractTags(filename) {
       // Simulate tag extraction based on the filename
