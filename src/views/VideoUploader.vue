@@ -22,6 +22,8 @@
       <video :src="video.url" controls width="780"></video>
       <h3>{{ video.title }}</h3>
       <p>Tags: {{ video.tags.join(', ') }}</p>
+      <p>Summary: {{ video.summary }}</p>
+      <p>Transcription: {{ video.transcription }}</p>
       <button @click="downloadVideo(video.url, video.title)">Download Video</button>
       <br />
       <br />
@@ -52,8 +54,42 @@ export default {
       const droppedFiles = Array.from(event.dataTransfer.files)
       this.uploadVideos(droppedFiles)
     },
+    // async uploadVideos(selectedFiles) {
+    //   console.log('Selected files:', selectedFiles)
+    //   if (selectedFiles.length === 0) {
+    //     alert('Please select at least one video file.')
+    //     return
+    //   }
+
+    //   const uploadPromises = selectedFiles.map((file) => {
+    //     const formData = new FormData()
+    //     formData.append('video', file)
+
+    //     return axios
+    //       .post('http://localhost:3000/upload', formData)
+    //       .then((response) => {
+    //         const url = URL.createObjectURL(file)
+    //         return {
+    //           title: file.name,
+    //           url: url,
+    //           tags: this.extractTags(file.name),
+    //           summary: response.data.summary || 'No summary available', // Get summary from response
+    //         }
+    //       })
+    //       .catch((error) => {
+    //         console.error(
+    //           'Error uploading file:',
+    //           error.response ? error.response.data : error.message,
+    //         )
+    //         return null
+    //       })
+    //   })
+
+    //   const uploadedVideos = await Promise.all(uploadPromises)
+    //   this.videos = uploadedVideos.filter((video) => video !== null)
+    // },
     async uploadVideos(selectedFiles) {
-      console.log('Selected files:', selectedFiles) // Log selected files
+      console.log('Selected files:', selectedFiles)
       if (selectedFiles.length === 0) {
         alert('Please select at least one video file.')
         return
@@ -71,6 +107,8 @@ export default {
               title: file.name,
               url: url,
               tags: this.extractTags(file.name),
+              summary: response.data.summary || 'No summary available', // Get summary from response
+              transcription: response.data.transcriptions || 'No transcription available', // Get transcription from response
             }
           })
           .catch((error) => {
@@ -78,7 +116,7 @@ export default {
               'Error uploading file:',
               error.response ? error.response.data : error.message,
             )
-            return null // Handle the error
+            return null
           })
       })
 
@@ -86,8 +124,7 @@ export default {
       this.videos = uploadedVideos.filter((video) => video !== null)
     },
     extractTags(filename) {
-      // Simulate tag extraction based on the filename
-      return filename.split('.')[0].split('_') // Example: "video_tag1_tag2.mp4" -> ["video", "tag1", "tag2"]
+      return filename.split('.')[0].split('_')
     },
     downloadVideo(url, title) {
       const link = document.createElement('a')
